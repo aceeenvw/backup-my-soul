@@ -8,10 +8,10 @@ A simple extension to back up your SillyTavern chats with one click.
 - **Backup All Chats (Current Character)** — saves every chat file for the selected character
 - **Backup Everything (All Characters)** — iterates all characters and backs up every chat, organized into subfolders
 
-### Desktop (Chrome / Edge)
+### Desktop
 Pick a folder via the native OS folder picker. Files are written directly into it. "Backup Everything" creates a subfolder per character automatically.
 
-### Mobile / Firefox
+### Mobile
 Folder picker isn't available — bulk backups download as a single `.zip` file with the same folder structure inside.
 
 ## Installation
