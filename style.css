@@ -1,0 +1,39 @@
+#chat-backup-settings .menu_button {
+    margin-top: 5px;
+    cursor: pointer;
+}
+#chat-backup-settings .inline-drawer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+#chat-backup-settings .backup-info {
+    font-size: 0.85em;
+    opacity: 0.7;
+    margin-top: 3px;
+}
+#chat-backup-settings #chat_backup_folder_display {
+    padding: 5px 8px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 5px;
+    background: var(--SmartThemeBlurTintColor);
+    min-height: 1.5em;
+    word-break: break-all;
+}
+#chat-backup-settings .backup-status {
+    font-size: 0.85em;
+    padding: 3px 6px;
+    border-radius: 3px;
+    min-height: 1.2em;
+}
+#chat-backup-settings hr {
+    border-color: var(--SmartThemeBorderColor);
+    opacity: 0.3;
+}
+#chat-backup-settings .backup-notice {
+    font-size: 0.8em;
+    opacity: 0.6;
+    padding: 4px 6px;
+    border-left: 2px solid var(--SmartThemeBorderColor);
+    margin-top: 4px;
+}
