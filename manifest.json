@@ -1,0 +1,12 @@
+{
+    "display_name": "Backup My Soul",
+    "loading_order": 1,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "aceenvw",
+    "version": "2.0.0",
+    "homePage": "",
+    "auto_update": true
+}

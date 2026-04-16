@@ -1,0 +1,329 @@
+/* Backup My Soul v2 — aceenvw */
+
+#bms-root {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#bms-root .inline-drawer-content {
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ── Buttons ── */
+.bms-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyColor);
+    font-size: 0.82em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.bms-btn:hover {
+    border-color: var(--SmartThemeQuoteColor);
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor) 12%, transparent);
+}
+
+.bms-btn:active {
+    transform: scale(0.97);
+}
+
+.bms-btn.primary {
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor) 20%, var(--SmartThemeBlurTintColor));
+    border-color: var(--SmartThemeQuoteColor);
+}
+
+.bms-btn.primary:hover {
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor) 35%, var(--SmartThemeBlurTintColor));
+}
+
+.bms-btn.danger {
+    border-color: #c0392b;
+    color: #e74c3c;
+}
+
+.bms-btn.danger:hover {
+    background: rgba(231, 76, 60, 0.12);
+}
+
+.bms-btn:disabled,
+.bms-btn.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.bms-btn i {
+    font-size: 0.9em;
+}
+
+/* ── Section divider ── */
+.bms-divider {
+    border: none;
+    border-top: 1px solid var(--SmartThemeBorderColor);
+    opacity: 0.25;
+    margin: 4px 0;
+}
+
+/* ── Folder display ── */
+#bms-folder-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    background: var(--SmartThemeBlurTintColor);
+    font-size: 0.8em;
+    color: var(--SmartThemeBodyColor);
+    opacity: 0.75;
+    min-height: 1.5em;
+    word-break: break-all;
+}
+
+#bms-folder-display i {
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
+/* ── Mode notice ── */
+.bms-notice {
+    font-size: 0.78em;
+    opacity: 0.5;
+    padding: 4px 8px;
+    border-left: 2px solid var(--SmartThemeBorderColor);
+    line-height: 1.4;
+}
+
+/* ── Info text ── */
+.bms-info {
+    font-size: 0.75em;
+    opacity: 0.45;
+    padding: 0 2px;
+}
+
+/* ── Checkbox label ── */
+.bms-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82em;
+    cursor: pointer;
+    user-select: none;
+    color: var(--SmartThemeBodyColor);
+    opacity: 0.85;
+}
+
+.bms-checkbox:hover {
+    opacity: 1;
+}
+
+/* ── Button group (backup actions) ── */
+.bms-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* ── Progress ── */
+#bms-progress {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#bms-progress.active {
+    display: flex;
+}
+
+#bms-progress-track {
+    width: 100%;
+    height: 3px;
+    background: var(--SmartThemeBorderColor);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+#bms-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--SmartThemeQuoteColor);
+    border-radius: 2px;
+    transition: width 0.25s ease;
+}
+
+#bms-status {
+    font-size: 0.78em;
+    color: var(--SmartThemeBodyColor);
+    opacity: 0.7;
+    min-height: 1em;
+}
+
+/* ── Character select modal ── */
+#bms-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+}
+
+#bms-modal {
+    background: var(--SmartThemeBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 10px;
+    padding: 16px;
+    width: min(420px, 90vw);
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#bms-modal-title {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--SmartThemeBodyColor);
+}
+
+#bms-modal-search {
+    padding: 5px 8px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyColor);
+    font-size: 0.82em;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+#bms-modal-search:focus {
+    border-color: var(--SmartThemeQuoteColor);
+}
+
+#bms-modal-search::placeholder {
+    color: var(--SmartThemeBodyColor);
+    opacity: 0.4;
+}
+
+#bms-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 350px;
+    overflow-y: auto;
+    padding: 2px;
+    scrollbar-width: thin;
+}
+
+#bms-modal-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+#bms-modal-list::-webkit-scrollbar-thumb {
+    background: var(--SmartThemeBorderColor);
+    border-radius: 2px;
+}
+
+.bms-modal-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    font-size: 0.82em;
+    color: var(--SmartThemeBodyColor);
+}
+
+.bms-modal-item:hover {
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor) 8%, transparent);
+    border-color: var(--SmartThemeBorderColor);
+}
+
+.bms-modal-item.selected {
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor) 15%, transparent);
+    border-color: var(--SmartThemeQuoteColor);
+}
+
+.bms-modal-item .bms-mi-check {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--SmartThemeBorderColor);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: transparent;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.bms-modal-item.selected .bms-mi-check {
+    border-color: var(--SmartThemeQuoteColor);
+    background: var(--SmartThemeQuoteColor);
+    color: #fff;
+}
+
+.bms-modal-item .bms-mi-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--SmartThemeBorderColor);
+    flex-shrink: 0;
+}
+
+.bms-modal-item .bms-mi-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#bms-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+#bms-modal-footer .bms-modal-count {
+    font-size: 0.78em;
+    opacity: 0.6;
+    color: var(--SmartThemeBodyColor);
+}
+
+#bms-modal-footer .bms-modal-btns {
+    display: flex;
+    gap: 6px;
+}
+
+#bms-modal-footer .bms-btn {
+    width: auto;
+    padding: 5px 14px;
+}
