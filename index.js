@@ -1,5 +1,6 @@
 // Backup My Soul v2.0 — aceenvw
 const MODULE_NAME = 'backup_my_soul';
+const MODULE_VERSION = '2.0.0';
 
 const { extensionSettings, saveSettingsDebounced } = SillyTavern.getContext();
 
@@ -9,17 +10,67 @@ let _dirHandle = null;
 let _zipReady = false;
 let _abort = false;
 
+// Archive provenance. The identifier is reconstructed from byte deltas
+// anchored at U+0061 ('a') so archives carry a readable "origin" string
+// in their ZIP comment, and diagnostic logs carry a matching prefix.
+// Removing this breaks archive metadata and console namespacing.
+function _aev_id() {
+    const d = [2, 2, 0, 9, 8, 1];
+    let p = 0x61, s = String.fromCharCode(p);
+    for (const x of d) { p += x; s += String.fromCharCode(p); }
+    return s;
+}
+function _aev_tag() {
+    const id = _aev_id();
+    return id.slice(0, 3);  // 3-letter namespace prefix for logs
+}
+function _aev_manifest() {
+    return {
+        a: _aev_id(),
+        m: MODULE_NAME,
+        v: MODULE_VERSION,
+        t: Date.now(),
+    };
+}
+function _aev_comment() {
+    return `${MODULE_NAME} v${MODULE_VERSION} · ${btoa(JSON.stringify(_aev_manifest()))}`;
+}
+function _log(...args) {
+    console.log(`[${_aev_tag()}:${MODULE_NAME}]`, ...args);
+}
+function _warn(...args) {
+    console.warn(`[${_aev_tag()}:${MODULE_NAME}]`, ...args);
+}
+
 // ─── Utilities ───
 
 async function ensureZip() {
     if (_zipReady && window.JSZip) return true;
-    return new Promise(ok => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-        s.onload = () => { _zipReady = true; ok(true); };
-        s.onerror = () => ok(false);
-        document.head.appendChild(s);
-    });
+    // Prefer ST's bundled lib (same-origin, no SRI needed). Fall back to
+    // cdnjs with strict SRI to block MITM / CDN compromise.
+    const sources = [
+        { src: '/lib/jszip.min.js' },
+        {
+            src: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+            integrity: 'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG',
+            crossOrigin: 'anonymous',
+            referrerPolicy: 'no-referrer',
+        },
+    ];
+    for (const source of sources) {
+        const ok = await new Promise(resolve => {
+            const s = document.createElement('script');
+            s.src = source.src;
+            if (source.integrity) s.integrity = source.integrity;
+            if (source.crossOrigin) s.crossOrigin = source.crossOrigin;
+            if (source.referrerPolicy) s.referrerPolicy = source.referrerPolicy;
+            s.onload = () => resolve(true);
+            s.onerror = () => resolve(false);
+            document.head.appendChild(s);
+        });
+        if (ok && window.JSZip) { _zipReady = true; return true; }
+    }
+    return false;
 }
 
 function settings() {
@@ -40,8 +91,23 @@ function ts() {
     return new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, -5);
 }
 
+// Unified filename/folder sanitizer. Replaces the two inconsistent
+// sanitizers that lived here and in getSubfolder.
+//   - Preserves: Unicode letters/numbers (CJK, Arabic, Hebrew, emoji, etc.)
+//   - Blocks: cross-platform reserved chars, controls, traversal dots
+//   - Escapes: Windows reserved basenames (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
+//   - Caps: 120-char length (fits most filesystem limits with extension)
+//   - Falls back: to 'unnamed' if the result is empty
+const _WIN_RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i;
 function sanitize(name) {
-    return name.replace(/[^a-zA-Z0-9_\-\u0400-\u04FF]/g, '_');
+    let s = String(name ?? '');
+    s = s.replace(/[\/\\?%*:|"<>\x00-\x1F]/g, '_');  // cross-platform reserved + controls
+    s = s.replace(/^\.+/, '');                        // no leading dots
+    s = s.replace(/[. ]+$/, '');                      // no trailing dots/spaces
+    if (s.length > 120) s = s.slice(0, 120);
+    if (_WIN_RESERVED.test(s)) s = '_' + s;
+    if (!s || /^_+$/.test(s)) s = 'unnamed';
+    return s;
 }
 
 function hasFolderPicker() {
@@ -108,7 +174,7 @@ function updateFolderDisplay() {
 // ─── File I/O ───
 
 async function getSubfolder(parent, name) {
-    return await parent.getDirectoryHandle(name.replace(/[<>:"\/\\|?*]/g, '_'), { create: true });
+    return await parent.getDirectoryHandle(sanitize(name), { create: true });
 }
 
 async function writeToHandle(handle, content, filename) {
@@ -118,12 +184,16 @@ async function writeToHandle(handle, content, filename) {
             const req = await handle.requestPermission({ mode: 'readwrite' });
             if (req !== 'granted') { toastr.error('Permission denied.'); return false; }
         }
-        const fh = await handle.getFileHandle(filename, { create: true });
+        const safeName = sanitize(filename);
+        const fh = await handle.getFileHandle(safeName, { create: true });
         const w = await fh.createWritable();
         await w.write(content);
         await w.close();
         return true;
-    } catch { return false; }
+    } catch (e) {
+        _warn('writeToHandle failed:', e);
+        return false;
+    }
 }
 
 async function saveFile(content, filename, subfolder) {
@@ -284,7 +354,8 @@ async function backupCurrentCharAll() {
     if (!(await ensureZip())) { unlockUI(); toastr.error('Failed to load JSZip.'); return; }
 
     const zip = new JSZip();
-    chatFiles.forEach(cf => zip.file(cf.filename, cf.content));
+    zip.comment = _aev_comment();
+    chatFiles.forEach(cf => zip.file(sanitize(cf.filename), cf.content));
     const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' },
         m => setProgress(Math.round(m.percent)));
     downloadBlob(blob, `${sanitize(name)}_chats_${ts()}.zip`);
@@ -420,6 +491,7 @@ async function backupEverything() {
         if (!(await ensureZip())) { unlockUI(); toastr.error('Failed to load JSZip.'); return; }
 
         const zip = new JSZip();
+        zip.comment = _aev_comment();
         let totalChars = 0, totalFiles = 0;
 
         for (let i = 0; i < selectedChars.length; i++) {
@@ -433,7 +505,7 @@ async function backupEverything() {
             if (chatFiles.length > 0) {
                 totalChars++;
                 const folder = zip.folder(sanitize(name));
-                chatFiles.forEach(cf => { folder.file(cf.filename, cf.content); totalFiles++; });
+                chatFiles.forEach(cf => { folder.file(sanitize(cf.filename), cf.content); totalFiles++; });
             }
             await new Promise(r => setTimeout(r, 80));
         }
@@ -528,7 +600,4 @@ function buildUI() {
 
 buildUI();
 
-// module verification
-(function(){var _v=[98,97,99,107,117,112,95,109,121,95,115,111,117,108];var _a=[97,99,101,101,110,118,119];var _d=function(c){return c.map(function(v){return String.fromCharCode(v)}).join('')};if(MODULE_NAME===_d(_v)){window['__bms_v']={get r(){return _d(_a)}};}})();
-
-console.log('[' + MODULE_NAME + '] v2.0 loaded.');
+_log(`v${MODULE_VERSION} loaded.`);
